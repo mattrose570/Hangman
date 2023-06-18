@@ -161,7 +161,7 @@ class Hangman
     def userLineAlteration(positionArr, userArr, wordArr)
         # Error handling to catch the false case. 
         if !positionArr
-            
+            @attempts += 1
             return 
 
         else
@@ -182,6 +182,7 @@ class Hangman
 
         outfile.puts(userArr.join(""))
         outfile.puts(wordArr.join(""))
+        outfile.puts(@alreadyUsed.join(""))
         outfile.puts(@attempts)
 
         outfile.close()
@@ -193,70 +194,177 @@ class Hangman
         puts "You will have to enter letters one at a time"
         puts "before your buddy is completly hung"
         puts "Good luck!"
+        
     end
 
-    
+    def startFromSave?()
+        puts "Would you like to start from the last saved game? (y or n)"
+        choice = gets.chomp
+        if choice == "n"
+            return false
+
+        else
+            return true
+
+        end
+    end
+
+    def read_save_file()
+        fileName = "saved_games/gamesave.txt"
+        rtnHash = Hash.new()
+        inputFile = File.open(fileName, "r")
+        counter = 0
+
+        inputFile.each_line do |line|
+            rtnHash[counter] = line.chomp
+            counter += 1
+
+        end
+        inputFile.close
+
+        
+
+        return rtnHash
+    end
+
+    def save_game_loop(savedHash)
+        flag = false
+        #user array, word array, attempts, and used letter array 
+                # in that order 
+            #word selection
+
+            @theWord = savedHash[1]
 
 
+            wordArray = word_line(@theWord)
 
+            savedHash[2].each_char {|char| @alreadyUsed << char}
 
+            # Creates an array of underscores the same length 
+            # as the secret word
+            userArr = []
+            savedHash[0].each_char{|char| userArr << char}
+
+            @attempts = savedHash[3].to_i()
+            flag = false
+            
+            # while loop that goes until the game is won or
+            # if the user exceeds 7 attempts
+            while !flag && @attempts < 7
+
+                # Print the man hanging. changes per attempt
+                stick_figure(@attempts)
+
+                # Prints the letters the user guessed. 
+                # Also prints the user & word arrays for testing 
+                puts "Already used: #{@alreadyUsed.join(", ")}"
+                puts userArr.join("  ")
+                puts wordArray.join
+                
+                # returns false or an array with the indexes of 
+                # the letter the user guessed correctly
+                positionArr = letter_guess_test(wordArray)
+
+                # Used to change the user array based on the set of indices that
+                # the position array contains 
+                userLineAlteration(positionArr, userArr, wordArray)
+                
+                # Counter 
+                
+
+                # Saves the user array, word array, attempts, and used letter array 
+                # in that order 
+                save_game(userArr, wordArray)
+
+                
+                # Tests to see if the user won
+                if userArr == wordArray
+                    flag = true
+                    break
+                end
+            end
+            
+            # If flag is true, the user won
+            # if not, they suck
+            if flag
+                puts "You won"
+            else
+                puts "You suck"
+            
+            end
+
+        
+        end
 
     def gameloop()
         welcome_message()
         # flag to break out of loop
-        flag = false
         
-        #word selection
-        wordArray = word_line(@theWord)
-
-        # Creates an array of underscores the same length 
-        # as the secret word
-        userArr = under_line(wordArray)
+        if !startFromSave?
+            flag = false
         
-        # while loop that goes until the game is won or
-        # if the user exceeds 7 attempts
-        while !flag && @attempts < 7
+            #word selection
+            wordArray = word_line(@theWord)
 
-            # Print the man hanging. changes per attempt
-            stick_figure(@attempts)
-
-            # Prints the letters the user guessed. 
-            # Also prints the user & word arrays for testing 
-            puts "Already used: #{@alreadyUsed.join(", ")}"
-            puts userArr.join("  ")
-            puts wordArray.join
+            # Creates an array of underscores the same length 
+            # as the secret word
+            userArr = under_line(wordArray)
             
-            # returns false or an array with the indexes of 
-            # the letter the user guessed correctly
-            positionArr = letter_guess_test(wordArray)
+            # while loop that goes until the game is won or
+            # if the user exceeds 7 attempts
+            while !flag && @attempts < 7
 
-            # Used to change the user array based on the set of indices that
-            # the position array contains 
-            userLineAlteration(positionArr, userArr, wordArray)
-            
-            # Counter 
-            @attempts += 1
+                # Print the man hanging. changes per attempt
+                stick_figure(@attempts)
 
-            # Saves the user array, word array, attempts, and used letter array 
-            # in that order 
-            save_game(userArr, wordArray)
+                # Prints the letters the user guessed. 
+                # Also prints the user & word arrays for testing 
+                puts "Already used: #{@alreadyUsed.join(", ")}"
+                puts userArr.join("  ")
+                puts wordArray.join
+                
+                # returns false or an array with the indexes of 
+                # the letter the user guessed correctly
+                positionArr = letter_guess_test(wordArray)
 
-            
-            # Tests to see if the user won
-            if userArr == wordArray
-                flag = true
-                break
+                # Used to change the user array based on the set of indices that
+                # the position array contains 
+                userLineAlteration(positionArr, userArr, wordArray)
+                
+                # Counter 
+                
+
+                # Saves the user array, word array, attempts, and used letter array 
+                # in that order 
+                save_game(userArr, wordArray)
+
+                
+                # Tests to see if the user won
+                if userArr == wordArray
+                    flag = true
+                    break
+                end
             end
-        end
-        
-        # If flag is true, the user won
-        # if not, they suck
-        if flag
-            puts "You won"
+            
+            # If flag is true, the user won
+            # if not, they suck
+            if flag
+                puts "You won"
+            else
+                puts "You suck"
+            
+            end
+
         else
-            puts "You suck"
-        
+            save_game_loop(read_save_file())
+            
+
+
+
+
         end
+        
+        
     end
 
 

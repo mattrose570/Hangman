@@ -23,9 +23,6 @@ class Hangman
             counter += 1
 
         end
-        
-        
-        
         inputFile.close
 
         return rtnHash

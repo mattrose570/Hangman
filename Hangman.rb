@@ -43,17 +43,7 @@ class Hangman
     # will print stick figure to user
     def stick_figure(mistakeNum)
 
-        str0 = 
         
-        
-    "------
-    |    |
-    |
-    |
-    |
-    |
-    |
-    ------------"
         mistake = [
             """
         ------
@@ -174,7 +164,7 @@ class Hangman
     def userLineAlteration(positionArr, userArr, wordArr)
         # Error handling to catch the false case. 
         if !positionArr
-            attempts += 1
+            
             return 
 
         else
@@ -186,6 +176,28 @@ class Hangman
         end
     end
 
+    def save_game(userArr, wordArr)
+        Dir.mkdir("saved_games") unless Dir.exist?("saved_games")
+
+        #filename = "output/thanks_#{id}.html"
+        fname = "saved_games/gamesave.txt"
+        outfile = File.open(fname, "w")
+
+        outfile.puts(userArr.join(""))
+        outfile.puts(wordArr.join(""))
+        outfile.puts(@attempts)
+
+        outfile.close()
+
+    end
+
+    def welcome_message()
+        puts "This is a command line game of hangman"
+        puts "You will have to enter letters one at a time"
+        puts "before your buddy is completly hung"
+        puts "Good luck!"
+    end
+
     
 
 
@@ -193,36 +205,55 @@ class Hangman
 
 
     def gameloop()
-        # Welcome message
-
+        welcome_message()
         # flag to break out of loop
         flag = false
         
         #word selection
         wordArray = word_line(@theWord)
+
+        # Creates an array of underscores the same length 
+        # as the secret word
         userArr = under_line(wordArray)
         
-        while !flag || @attempts > 7
+        # while loop that goes until the game is won or
+        # if the user exceeds 7 attempts
+        while !flag && @attempts < 7
 
+            # Print the man hanging. changes per attempt
             stick_figure(@attempts)
 
+            # Prints the letters the user guessed. 
+            # Also prints the user & word arrays for testing 
             puts "Already used: #{@alreadyUsed.join(", ")}"
-            puts userArr.join("")
+            puts userArr.join("  ")
             puts wordArray.join
             
+            # returns false or an array with the indexes of 
+            # the letter the user guessed correctly
             positionArr = letter_guess_test(wordArray)
 
-
+            # Used to change the user array based on the set of indices that
+            # the position array contains 
             userLineAlteration(positionArr, userArr, wordArray)
             
+            # Counter 
+            @attempts += 1
 
+            # Saves the user array, word array, attempts, and used letter array 
+            # in that order 
+            save_game(userArr, wordArray)
+
+            
+            # Tests to see if the user won
             if userArr == wordArray
                 flag = true
                 break
-
             end
         end
         
+        # If flag is true, the user won
+        # if not, they suck
         if flag
             puts "You won"
         else
